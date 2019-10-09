@@ -29,11 +29,14 @@
  */
 package org.openjfx.gradle;
 
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.repositories.FlatDirectoryArtifactRepository;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,16 +113,22 @@ public class JavaFXOptions {
     }
 
     public void modules(String...moduleNames) {
-        setModules(List.of(moduleNames));
+        setModules(Arrays.asList(moduleNames));
     }
 
     private void updateJavaFXDependencies() {
         clearJavaFXDependencies();
 
+        if (! JavaVersion.current().isJava11Compatible()) {
+            return;
+        }
+
         String configuration = getConfiguration();
         JavaFXModule.getJavaFXModules(this.modules).forEach(javaFXModule -> {
             if (customSDKArtifactRepository != null) {
-                project.getDependencies().add(configuration, Map.of("name", javaFXModule.getModuleName()));
+                Map<String, String> map = new HashMap<>();
+                map.put("name", javaFXModule.getModuleName());
+                project.getDependencies().add(configuration, map);
             } else {
                 project.getDependencies().add(configuration,
                         String.format("%s:%s:%s:%s", MAVEN_JAVAFX_ARTIFACT_GROUP_ID, javaFXModule.getArtifactName(),
@@ -149,7 +158,7 @@ public class JavaFXOptions {
         if (lastUpdatedConfiguration == null) {
             return;
         }
-        var configuration = project.getConfigurations().findByName(lastUpdatedConfiguration);
+        Configuration configuration = project.getConfigurations().findByName(lastUpdatedConfiguration);
         if (configuration != null) {
             if (customSDKArtifactRepository != null) {
                 configuration.getDependencies()

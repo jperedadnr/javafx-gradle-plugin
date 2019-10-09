@@ -32,6 +32,8 @@ package org.openjfx.gradle;
 import org.gradle.api.GradleException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -55,7 +57,7 @@ public enum JavaFXModule {
     private List<JavaFXModule> dependentModules;
 
     JavaFXModule(JavaFXModule...dependentModules) {
-        this.dependentModules = List.of(dependentModules);
+        this.dependentModules = Arrays.asList(dependentModules);
     }
 
     public static Optional<JavaFXModule> fromModuleName(String moduleName) {
@@ -83,16 +85,16 @@ public enum JavaFXModule {
     public static Set<JavaFXModule> getJavaFXModules(List<String> moduleNames) {
         validateModules(moduleNames);
 
-        return moduleNames.stream()
-                .map(JavaFXModule::fromModuleName)
-                .flatMap(Optional::stream)
-                .flatMap(javaFXModule -> javaFXModule.getMavenDependencies().stream())
-                .collect(Collectors.toSet());
+        Set<JavaFXModule> modules = new HashSet<>();
+        moduleNames.forEach(moduleName ->
+                fromModuleName(moduleName).ifPresent(m ->
+                        modules.addAll(m.getMavenDependencies())));
+        return modules;
     }
 
     public static void validateModules(List<String> moduleNames) {
-        var invalidModules = moduleNames.stream()
-                .filter(module -> JavaFXModule.fromModuleName(module).isEmpty())
+        List<String> invalidModules = moduleNames.stream()
+                .filter(module -> ! JavaFXModule.fromModuleName(module).isPresent())
                 .collect(Collectors.toList());
 
         if (! invalidModules.isEmpty()) {

@@ -1,4 +1,6 @@
 rootProject.name = 'javafxplugintests'
 
-include 'modular'
+if (JavaVersion.current().java9Compatible) {
+    include 'modular'
+}
 include 'non-modular'

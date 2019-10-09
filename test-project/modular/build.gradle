@@ -1,4 +1,8 @@
-mainClassName = 'org.openjfx.gradle.javafx.test/org.openjfx.gradle.javafx.test.Main'
+if (JavaVersion.current().isJava11Compatible()) {
+    mainClassName = 'org.openjfx.gradle.javafx.test/org.openjfx.gradle.javafx.test.Main'
+} else {
+    mainClassName = 'org.openjfx.gradle.javafx.test.Main'
+}
 
 javafx {
     modules = ['javafx.controls']
